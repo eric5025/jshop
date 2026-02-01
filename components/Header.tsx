@@ -11,7 +11,7 @@ import { useState } from 'react'
 export default function Header() {
   const router = useRouter()
   const { getTotalItems } = useCartStore()
-  const { isAuthenticated, user, logout } = useAuthStore()
+  const { isAuthenticated, isAdmin, user, logout } = useAuthStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
 
@@ -30,7 +30,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="relative w-10 h-10 rounded-full overflow-hidden border-primary-600">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary-600">
               <Image
                 src="/김지인 프로필.jpg"
                 alt="프로필"
@@ -67,6 +67,11 @@ export default function Header() {
             </Link>
             {isAuthenticated ? (
               <>
+                {isAdmin && (
+                  <Link href="/admin" className="text-primary-600 hover:text-primary-700 font-semibold">
+                    관리자
+                  </Link>
+                )}
                 <Link href="/orders" className="text-gray-700 hover:text-primary-600">
                   주문내역
                 </Link>
@@ -136,6 +141,15 @@ export default function Header() {
               </Link>
               {isAuthenticated ? (
                 <>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="text-primary-600 hover:text-primary-700 font-semibold"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      관리자
+                    </Link>
+                  )}
                   <Link
                     href="/orders"
                     className="text-gray-700 hover:text-primary-600"

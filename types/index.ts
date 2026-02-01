@@ -27,6 +27,7 @@ export interface User {
   name: string
   phone?: string
   address?: Address
+  role?: 'admin' | 'user'
 }
 
 export interface Address {

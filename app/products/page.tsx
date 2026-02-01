@@ -3,11 +3,13 @@
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/ProductCard'
-import { products, categories } from '@/data/products'
+import { useProductStore } from '@/store/productStore'
+import { categories } from '@/data/products'
 import { Product } from '@/types'
 
 function ProductsContent() {
   const searchParams = useSearchParams()
+  const { products } = useProductStore()
   const [selectedCategory, setSelectedCategory] = useState<string>('전체')
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'rating' | 'newest'>('newest')
 
@@ -53,7 +55,7 @@ function ProductsContent() {
     })
 
     return sorted
-  }, [searchQuery, selectedCategory, sortBy])
+  }, [products, searchQuery, selectedCategory, sortBy])
 
   return (
     <div className="container mx-auto px-4 py-8">

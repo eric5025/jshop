@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { products } from '@/data/products'
+import { useProductStore } from '@/store/productStore'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { FiStar, FiShoppingCart, FiHeart } from 'react-icons/fi'
@@ -12,9 +12,10 @@ import { Product } from '@/types'
 export default function ProductDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { products, getProduct } = useProductStore()
   const { addItem } = useCartStore()
   const { isAuthenticated } = useAuthStore()
-  const product = products.find((p) => p.id === params.id)
+  const product = getProduct(params.id as string)
 
   const [selectedSize, setSelectedSize] = useState<string>('')
   const [selectedColor, setSelectedColor] = useState<string>('')

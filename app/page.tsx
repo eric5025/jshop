@@ -1,9 +1,14 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import ProductCard from '@/components/ProductCard'
-import { products } from '@/data/products'
+import { useProductStore } from '@/store/productStore'
+import { useSettingsStore } from '@/store/settingsStore'
 
 export default function Home() {
+  const { products } = useProductStore()
+  const { heroImage } = useSettingsStore()
   const featuredProducts = products.filter((p) => p.featured)
 
   return (
@@ -13,14 +18,14 @@ export default function Home() {
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/hero-image.jpg"
+            src={heroImage}
             alt="새로운 시즌의 트렌드"
             fill
             className="object-cover"
             priority
           />
           {/* 어두운 오버레이 (텍스트 가독성을 위해) */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/80 to-primary-700/80"></div>
+          <div className="absolute inset-0 bg-black/30"></div>
         </div>
         {/* 콘텐츠 */}
         <div className="relative z-10 container mx-auto px-4 h-full flex items-center">

@@ -61,7 +61,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center space-x-2">
                 <FiMail className="w-4 h-4" />
-                <span>info@fashion.com</span>
+                <span>github.com/eric5025</span>
               </li>
               <li className="flex items-start space-x-2">
                 <FiMapPin className="w-4 h-4 mt-1" />
@@ -71,7 +71,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 여성의류 쇼핑몰. All rights reserved.</p>
+          <p>&copy; 2026 여성의류 쇼핑몰. All rights reserved | github.com/eric5025</p>
         </div>
       </div>
     </footer>
