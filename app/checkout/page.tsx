@@ -1,17 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useOrderStore } from '@/store/orderStore'
 import { Address } from '@/types'
+// 토스페이먼츠는 CDN을 통해 로드됩니다
+declare global {
+  interface Window {
+    PaymentWidget: any
+  }
+}
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCartStore()
   const { user, isAuthenticated } = useAuthStore()
-  const { createOrder } = useOrderStore()
+  const { createOrder, updateOrderStatus } = useOrderStore()
 
   const [shippingAddress, setShippingAddress] = useState<Address>({
     postalCode: '',
@@ -20,6 +26,11 @@ export default function CheckoutPage() {
     recipient: user?.name || '',
     phone: user?.phone || '',
   })
+
+  const [paymentWidget, setPaymentWidget] = useState<any>(null)
+  const [paymentMethodsWidget, setPaymentMethodsWidget] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const paymentWidgetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -31,6 +42,51 @@ export default function CheckoutPage() {
       return
     }
   }, [isAuthenticated, user, items.length, router])
+
+  useEffect(() => {
+    const initPaymentWidget = async () => {
+      try {
+        // 토스페이먼츠 스크립트 로드
+        if (!window.PaymentWidget) {
+          const script = document.createElement('script')
+          script.src = 'https://js.tosspayments.com/v1/payment-widget'
+          script.async = true
+          document.head.appendChild(script)
+
+          await new Promise((resolve) => {
+            script.onload = resolve
+          })
+        }
+
+        const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY || 'test_ck_DpexMgkW36PvLwK6K3x0l2E6bBgN'
+        
+        // 결제 위젯 초기화
+        const widget = window.PaymentWidget(clientKey, {
+          customerKey: user?.id || 'anonymous',
+        })
+
+        setPaymentWidget(widget)
+
+        // 결제 수단 위젯 렌더링
+        const methodsWidget = widget.renderPaymentMethods(
+          '#payment-method',
+          { value: getTotalPrice() + (getTotalPrice() >= 50000 ? 0 : 3000) },
+          { variantKey: 'DEFAULT' }
+        )
+
+        // 이용약관 위젯 렌더링
+        widget.renderAgreement('#agreement', { variantKey: 'AGREEMENT' })
+
+        setPaymentMethodsWidget(methodsWidget)
+      } catch (error) {
+        console.error('Payment widget initialization error:', error)
+      }
+    }
+
+    if (isAuthenticated && user && items.length > 0) {
+      initPaymentWidget()
+    }
+  }, [isAuthenticated, user, items.length, getTotalPrice])
 
   if (!isAuthenticated || !user || items.length === 0) {
     return (
@@ -44,8 +100,9 @@ export default function CheckoutPage() {
   const shippingFee = totalPrice >= 50000 ? 0 : 3000
   const finalTotal = totalPrice + shippingFee
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
     // 주소 검증
     if (
@@ -56,13 +113,37 @@ export default function CheckoutPage() {
       !shippingAddress.phone
     ) {
       alert('배송 정보를 모두 입력해주세요.')
+      setIsLoading(false)
       return
     }
 
-    // 주문 생성 (결제는 제외)
-    const order = createOrder(user.id, items, shippingAddress)
-    clearCart()
-    router.push(`/orders/${order.id}`)
+    try {
+      // 주문 생성
+      const order = createOrder(user.id, items, shippingAddress)
+      const orderName = items.length === 1 
+        ? items[0].product.name 
+        : `${items[0].product.name} 외 ${items.length - 1}개`
+
+      // 결제 요청
+      if (!paymentWidget) {
+        alert('결제 위젯이 초기화되지 않았습니다.')
+        setIsLoading(false)
+        return
+      }
+
+      await paymentWidget.requestPayment({
+        orderId: order.orderNumber,
+        orderName,
+        customerName: shippingAddress.recipient,
+        customerEmail: user.email,
+        successUrl: `${window.location.origin}/payments/success?orderId=${order.id}`,
+        failUrl: `${window.location.origin}/payments/fail?orderId=${order.id}`,
+      })
+    } catch (error: any) {
+      console.error('Payment error:', error)
+      alert('결제 요청 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'))
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -71,7 +152,7 @@ export default function CheckoutPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Shipping Form */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
             <h2 className="text-xl font-bold mb-4">배송 정보</h2>
 
@@ -155,19 +236,21 @@ export default function CheckoutPage() {
               />
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">
-                ⚠️ 결제 시스템은 아직 구현되지 않았습니다. 주문 정보만 저장됩니다.
-              </p>
-            </div>
-
             <button
               type="submit"
-              className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+              disabled={isLoading || !paymentWidget}
+              className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              주문 완료하기
+              {isLoading ? '결제 진행 중...' : '결제하기'}
             </button>
           </form>
+
+          {/* 결제 위젯 영역 */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 className="text-xl font-bold mb-4">결제 수단</h2>
+            <div id="payment-method" className="mb-4"></div>
+            <div id="agreement"></div>
+          </div>
         </div>
 
         {/* Order Summary */}

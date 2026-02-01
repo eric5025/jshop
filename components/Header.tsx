@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FiShoppingBag, FiUser, FiSearch, FiMenu } from 'react-icons/fi'
 import { useCartStore } from '@/store/cartStore'
@@ -28,8 +29,18 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-primary-600">
-            여성의류
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-primary-600">
+              <Image
+                src="/김지인 프로필.jpg"
+                alt="프로필"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <span className="text-2xl font-bold text-primary-600">
+              163._t
+            </span>
           </Link>
 
           {/* Desktop Search */}

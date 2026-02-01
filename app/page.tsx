@@ -9,8 +9,21 @@ export default function Home() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative h-[500px] bg-gradient-to-r from-primary-500 to-primary-700 text-white">
-        <div className="container mx-auto px-4 h-full flex items-center">
+      <section className="relative h-[500px] text-white overflow-hidden">
+        {/* 배경 이미지 */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/hero-image.jpg"
+            alt="새로운 시즌의 트렌드"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* 어두운 오버레이 (텍스트 가독성을 위해) */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/80 to-primary-700/80"></div>
+        </div>
+        {/* 콘텐츠 */}
+        <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
           <div className="max-w-2xl">
             <h1 className="text-5xl font-bold mb-4">
               새로운 시즌의 트렌드를 만나보세요

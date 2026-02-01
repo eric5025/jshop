@@ -46,4 +46,17 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled'
   createdAt: string
   orderNumber: string
+  paymentKey?: string
+  paymentStatus?: 'ready' | 'paid' | 'failed' | 'cancelled'
+  paymentMethod?: string
+}
+
+export interface PaymentRequest {
+  amount: number
+  orderId: string
+  orderName: string
+  customerName: string
+  customerEmail: string
+  successUrl: string
+  failUrl: string
 }

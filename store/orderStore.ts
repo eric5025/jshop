@@ -8,6 +8,7 @@ interface OrderStore {
   getOrder: (orderId: string) => Order | undefined
   getUserOrders: (userId: string) => Order[]
   updateOrderStatus: (orderId: string, status: Order['status']) => void
+  updatePaymentInfo: (orderId: string, paymentKey: string, paymentMethod: string) => void
 }
 
 export const useOrderStore = create<OrderStore>()(
@@ -43,6 +44,21 @@ export const useOrderStore = create<OrderStore>()(
         set({
           orders: get().orders.map((order) =>
             order.id === orderId ? { ...order, status } : order
+          ),
+        })
+      },
+      updatePaymentInfo: (orderId, paymentKey, paymentMethod) => {
+        set({
+          orders: get().orders.map((order) =>
+            order.id === orderId
+              ? {
+                  ...order,
+                  paymentKey,
+                  paymentMethod,
+                  paymentStatus: 'paid',
+                  status: 'confirmed',
+                }
+              : order
           ),
         })
       },
