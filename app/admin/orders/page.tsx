@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuthStore } from '@/store/authStore'
@@ -8,7 +8,7 @@ import { useOrderStore } from '@/store/orderStore'
 import { Order } from '@/types'
 import { FiEye } from 'react-icons/fi'
 
-export default function AdminOrdersPage() {
+function AdminOrdersContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated, isAdmin } = useAuthStore()
@@ -227,5 +227,30 @@ export default function AdminOrdersPage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function AdminOrdersPage() {
+  const router = useRouter()
+  const { isAuthenticated, isAdmin } = useAuthStore()
+
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) {
+      router.push('/admin/login')
+    }
+  }, [isAuthenticated, isAdmin, router])
+
+  if (!isAuthenticated || !isAdmin) {
+    return null
+  }
+
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">로딩 중...</div>
+      </div>
+    }>
+      <AdminOrdersContent />
+    </Suspense>
   )
 }
